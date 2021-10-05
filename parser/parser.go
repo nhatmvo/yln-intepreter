@@ -28,6 +28,7 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPREN:    CALL,
 }
 
 type (
@@ -75,6 +76,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInflix(token.LT, p.parseInflixExpression)
 	p.registerInflix(token.EQ, p.parseInflixExpression)
 	p.registerInflix(token.NOT_EQ, p.parseInflixExpression)
+	p.registerInflix(token.LPREN, p.parseCallExpression)
 
 	return p
 }
@@ -234,7 +236,40 @@ func (p *Parser) parseFunctionParameter() []*ast.Identifier {
 		identifiers = append(identifiers, ident)
 	}
 
+	if !p.expectedPeek(token.RPREN) {
+		return nil
+	}
+
 	return identifiers
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+	return exp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekTokenIs(token.RPREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectedPeek(token.RPREN) {
+		return nil
+	}
+	return args
 }
 
 func (p *Parser) Errors() []string {
@@ -280,7 +315,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	for !p.curTokenIs(token.SEMILCOLON) {
+	stmt.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMILCOLON) {
 		p.nextToken()
 	}
 
@@ -291,8 +328,9 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 
 	p.nextToken()
+	stmt.ReturnValue = p.parseExpression(LOWEST)
 
-	for !p.curTokenIs(token.SEMILCOLON) {
+	if p.peekTokenIs(token.SEMILCOLON) {
 		p.nextToken()
 	}
 

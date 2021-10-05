@@ -33,6 +33,16 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier
@@ -40,11 +50,9 @@ type LetStatement struct {
 }
 
 func (ls *LetStatement) statementNode() {}
-
 func (ls *LetStatement) TokenLiteral() string {
 	return ls.Token.Literal
 }
-
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer
 
@@ -66,11 +74,9 @@ type Identifier struct {
 }
 
 func (i *Identifier) expressionNode() {}
-
 func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
-
 func (i *Identifier) String() string {
 	return i.Value
 }
@@ -81,11 +87,9 @@ type ReturnStatement struct {
 }
 
 func (rs *ReturnStatement) statementNode() {}
-
 func (rs *ReturnStatement) TokenLiteral() string {
 	return rs.Token.Literal
 }
-
 func (rs *ReturnStatement) String() string {
 	var out bytes.Buffer
 	out.WriteString(rs.TokenLiteral())
@@ -103,11 +107,9 @@ type ExpressionStatement struct {
 }
 
 func (es *ExpressionStatement) statementNode() {}
-
 func (es *ExpressionStatement) TokenLiteral() string {
 	return es.Token.Literal
 }
-
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
 		return es.Expression.String()
@@ -121,23 +123,11 @@ type IntegerLiteral struct {
 }
 
 func (il *IntegerLiteral) expressionNode() {}
-
 func (il *IntegerLiteral) TokenLiteral() string {
 	return il.Token.Literal
 }
-
 func (il *IntegerLiteral) String() string {
 	return il.Token.Literal
-}
-
-func (p *Program) String() string {
-	var out bytes.Buffer
-
-	for _, s := range p.Statements {
-		out.WriteString(s.String())
-	}
-
-	return out.String()
 }
 
 type PrefixExpression struct {
@@ -147,11 +137,9 @@ type PrefixExpression struct {
 }
 
 func (pe *PrefixExpression) expressionNode() {}
-
 func (pe *PrefixExpression) TokenLiteral() string {
 	return pe.Token.Literal
 }
-
 func (pe *PrefixExpression) String() string {
 	var out bytes.Buffer
 
@@ -171,11 +159,9 @@ type InflixExpression struct {
 }
 
 func (ie *InflixExpression) expressionNode() {}
-
 func (ie *InflixExpression) TokenLiteral() string {
 	return ie.Token.Literal
 }
-
 func (ie *InflixExpression) String() string {
 	var out bytes.Buffer
 
@@ -194,11 +180,9 @@ type Boolean struct {
 }
 
 func (b *Boolean) expressionNode() {}
-
 func (b *Boolean) TokenLiteral() string {
 	return b.Token.Literal
 }
-
 func (b *Boolean) String() string {
 	return b.Token.Literal
 }
@@ -211,11 +195,9 @@ type IfExpression struct {
 }
 
 func (ie *IfExpression) expressionNode() {}
-
 func (ie *IfExpression) TokenLiteral() string {
 	return ie.Token.Literal
 }
-
 func (ie *IfExpression) String() string {
 	var out bytes.Buffer
 
@@ -238,11 +220,9 @@ type BlockStatement struct {
 }
 
 func (bs *BlockStatement) statementNode() {}
-
 func (bs *BlockStatement) TokenLiteral() string {
 	return bs.Token.Literal
 }
-
 func (bs *BlockStatement) String() string {
 	var out bytes.Buffer
 
@@ -258,12 +238,10 @@ type FunctionLiteral struct {
 	Body       *BlockStatement
 }
 
-func (fl *FunctionLiteral) expressionNode()
-
+func (fl *FunctionLiteral) expressionNode() {}
 func (fl *FunctionLiteral) TokenLiteral() string {
 	return fl.Token.Literal
 }
-
 func (fl *FunctionLiteral) String() string {
 	var out bytes.Buffer
 
@@ -277,6 +255,32 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(")")
 	out.WriteString(fl.Body.String())
+
+	return out.String()
+}
+
+type CallExpression struct {
+	Token     token.Token
+	Function  Expression // Function Literal or Identifier
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) TokenLiteral() string {
+	return ce.Token.Literal
+}
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+
+	args := []string{}
+	for _, arg := range ce.Arguments {
+		args = append(args, arg.String())
+	}
+
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
 
 	return out.String()
 }
