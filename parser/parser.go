@@ -314,6 +314,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	if !p.expectedPeek(token.ASSIGN) {
 		return nil
 	}
+	p.nextToken()
 
 	stmt.Value = p.parseExpression(LOWEST)
 
